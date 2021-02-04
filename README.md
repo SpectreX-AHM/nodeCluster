@@ -268,13 +268,13 @@ You can generate an Ecosystem File with the following command:
 `$ pm2 ecosystem`  
 
 It will generate a file named ecosystem.config.js. As for our app, we need to modify it as shown below:  
-`module.exports = {  
-  apps : [{  
-    name: "app",  
-    script: "app.js",  
-    instances : 0,  
-    exec_mode : "cluster"  
-  }]  
+`module.exports = {  <br />
+  apps : [{  <br />
+    name: "app",  <br />
+    script: "app.js",  <br />
+    instances : 0,  <br />
+    exec_mode : "cluster" <br /> 
+  }]  <br />
 }`    
 
 By setting exec_mode with the cluster value, you instruct PM2 to load balance between each instance. The instances are set to 0 just as before, which will spawn as many workers as there are CPU cores.
