@@ -15,53 +15,52 @@ Let’s use the cluster module in the app to spawn some child processes and see 
       const cluster = require('cluster');  
       const totalCPUs = require('os').cpus().length;  
 
-     if (cluster.isMaster) {  
-     console.log(`Number of CPUs is ${totalCPUs}`);  
-     console.log(`Master ${process.pid} is running`);  
+      if (cluster.isMaster) {  
+      console.log(`Number of CPUs is ${totalCPUs}`);  
+      console.log(`Master ${process.pid} is running`);  
 
-     //Fork workers.  
-     for (let i = 0; i < totalCPUs; i++) {  
-         cluster.fork();  
-     }  
+      //Fork workers.  
+      for (let i = 0; i < totalCPUs; i++) {  
+          cluster.fork();  
+      }  
 
-     cluster.on('exit', (worker, code, signal) => {  
-         console.log(`worker ${worker.process.pid} died`);  
-         console.log("Let's fork another worker!");  
-         cluster.fork();  
-     });  
+      cluster.on('exit', (worker, code, signal) => {  
+          console.log(`worker ${worker.process.pid} died`);  
+          console.log("Let's fork another worker!");  
+          cluster.fork();  
+      });  
 
-     } else {  
-     const app = express();  
-     console.log(`Worker ${process.pid} started`);  
+      } else {  
+      const app = express();  
+      console.log(`Worker ${process.pid} started`);  
 
-     app.get('/', (req, res) => {  
-         res.send('Hello World!');  
-     })  
+      app.get('/', (req, res) => {  
+          res.send('Hello World!');  
+      })  
 
-     app.get('/api/:n', function (req, res) {  
-         let n = parseInt(req.params.n);  
-         let count = 0;  
+      app.get('/api/:n', function (req, res) {  
+          let n = parseInt(req.params.n);  
+          let count = 0;  
 
-         if (n > 5000000000) n = 5000000000;  
+          if (n > 5000000000) n = 5000000000;  
 
-         for(let i = 0; i <= n; i++){  
-         count += i;  
-         }  
+          for(let i = 0; i <= n; i++){  
+          count += i;  
+          }  
 
-         res.send(`Final count is ${count}`);  
-     })  
+          res.send(`Final count is ${count}`);  
+      })  
 
-     app.listen(port, () => {  
-         console.log(`App listening on port ${port}`);  
-     })  
-
-     }  
+      app.listen(port, () => {  
+          console.log(`App listening on port ${port}`);  
+      })  
+      }  
 
 We are spawning up several child processes that will all share port 3000 and that will be able to handle requests sent to this port. The worker processes are spawned using the child_process.fork() method. The method returns a ChildProcess object that has a built-in communication channel that allows messages to be passed back and forth between the child and its parent.  
 We create as many child processes as there are CPU cores on the machine the app is running. It is recommended to not create more workers than there are logical cores on the computer as this can cause an overhead in terms of scheduling costs. This happens because the system will have to schedule all the created processes so that each gets a turn on the few cores.  
 The workers are created and managed by the master process. When the app first runs, we check to see if it’s a master process with isMaster. This is determined by the process.env.NODE_UNIQUE_ID variable. If process.env.NODE_UNIQUE_ID is undefined, then isMaster will be true.If the process is a master, we then call cluster.fork() to spawn several processes. We log the master and worker process IDs. Below, you can see the output from running the app on a four-core system. When a child process dies, we spawn a new one to keep utilizing the available CPU cores.  
 
-    `Number of CPUs is 4  
+    Number of CPUs is 4  
     Master 67967 is running  
     Worker 67981 started  
     App listening on port 3000  
@@ -70,7 +69,7 @@ The workers are created and managed by the master process. When the app first ru
     Worker 67982 started  
     Worker 67975 started  
     App listening on port 3000  
-    App listening on port 3000`    
+    App listening on port 3000    
 
 To see the improvement clustering offers, run the same experiment as before: first make a request to the server with a large value for n and quickly run another request in another browser tab. The second request will complete while the first is still running — it doesn’t have to wait for the other request to complete. With multiple workers available to take requests, both server availability and throughput are improved.  
 Running a request in one browser tab and quickly running another one in a second tab might work to show us the improvement offered by clustering for our example, but it’s hardly a proper or reliable way to determine performance improvements. Let’s take a look at some benchmarks that will better demonstrate how much clustering has improved our app.
@@ -86,7 +85,7 @@ Then run the app that you want to test with node app.js. We’ll start by testin
 The above command will send 1000 requests to the given URL, of which 100 are concurrent. The following is the output from running the above command:    
     `Requests: 0 (0%), requests per second: 0, mean latency: 0 ms`  
 
-    `Target URL:          http://localhost:3000/api/500000  
+    Target URL:          http://localhost:3000/api/500000  
     Max requests:        1000  
     Concurrency level:   100  
     Agent:               none  
@@ -102,14 +101,14 @@ The above command will send 1000 requests to the given URL, of which 100 are con
     90%      132 ms  
     95%      135 ms  
     99%      141 ms  
-    100%      142 ms (longest request)`    
+    100%      142 ms (longest request)    
 
  We see that with the same request (with n = 500000) the server was able to handle 788 requests per second with a mean latency of 119.4 milliseconds (the average time it took to complete a single request). Let’s try it again but with more requests this time (and with no clusters):  
  `$ loadtest http://localhost:3000/api/5000000 -n 1000 -c 100`  
 
  Below’s the output:  
 
-    `Requests: 0 (0%), requests per second: 0, mean latency: 0 ms  
+    Requests: 0 (0%), requests per second: 0, mean latency: 0 ms  
     Requests: 573 (57%), requests per second: 115, mean latency: 798.3 ms  
 
     Target URL:          http://localhost:3000/api/5000000  
@@ -128,12 +127,12 @@ The above command will send 1000 requests to the given URL, of which 100 are con
     90%      874 ms  
     95%      876 ms  
     99%      879 ms  
-    100%      880 ms (longest request)`  
+    100%      880 ms (longest request)  
 
 With a request where n = 5000000 the server was able to handle 114 requests per second with a mean latency of 828.9 milliseconds. Let’s compare this result with that of the app that uses clusters. Stop the non-cluster app, run the clustered one and, finally, run the same load tests.  
 Below are the results for testing for http://localhost:3000/api/500000:  
 
-    `Requests: 0 (0%), requests per second: 0, mean latency: 0 ms  
+    Requests: 0 (0%), requests per second: 0, mean latency: 0 ms  
 
     Target URL:          http://localhost:3000/api/500000  
     Max requests:        1000  
@@ -151,12 +150,12 @@ Below are the results for testing for http://localhost:3000/api/500000:
     90%      81 ms  
     95%      90 ms  
     99%      106 ms  
-    100%      112 ms (longest request)`  
+    100%      112 ms (longest request)  
 
 Tested with the same requests (when n = 500000), the app that uses clustering was able to handle 1426 requests per second — a significant increase, compared to the 788 requests per second of the app with no clusters. The mean latency of the clustered app is 65 milliseconds, compared to 119.4 of the app with no clusters. You can clearly see the improvement that clustering added to the app.  
 And below are the results for testing for http://localhost:3000/api/5000000:  
 
-    `Requests: 0 (0%), requests per second: 0, mean latency: 0 ms  
+    Requests: 0 (0%), requests per second: 0, mean latency: 0 ms  
 
     Target URL:          http://localhost:3000/api/5000000  
     Max requests:        1000  
@@ -174,7 +173,7 @@ And below are the results for testing for http://localhost:3000/api/5000000:
     90%      253 ms  
     95%      259 ms  
     99%      355 ms  
-    100%      421 ms (longest request)`  
+    100%      421 ms (longest request)  
 
 Here (when n = 5000000), the app was able to run 410 requests per second, compared to 114 of the app with no clusters, with a latency of 229.9, compared with 828.9 of the other app.  
 Before moving on to the next section, let’s take a look at a scenario where clustering may not offer much performance improvement. We’ll run two more tests for each of our apps. We’ll test requests that aren’t CPU-intensive and that run fairly quickly without overloading the Event Loop. With the no-cluster app running, execute the following test:     
@@ -266,14 +265,14 @@ You can generate an Ecosystem File with the following command:
 `$ pm2 ecosystem`  
 
 It will generate a file named ecosystem.config.js. As for our app, we need to modify it as shown below:  
-`module.exports = {   
-  apps : [{   
-    name: "app",   
-    script: "app.js",   
-    instances : 0,   
-    exec_mode : "cluster"   
-  }]   
-}`   
+      module.exports = {   
+            apps : [{   
+            name: "nodeCluster",   
+            script: "app.js",   
+            instances : 0,   
+            exec_mode : "cluster"   
+            }]   
+            }   
 
 By setting exec_mode with the cluster value, you instruct PM2 to load balance between each instance. The instances are set to 0 just as before, which will spawn as many workers as there are CPU cores.
 
@@ -288,11 +287,11 @@ You can now run the app with:
 The app will run in cluster mode, just as before.
 
 You can start, restart, reload, stop and delete an app with the following commands, respectively:  
-` $ pm2 start app_name  
-  $ pm2 restart app_name  
-  $ pm2 reload app_name  
-  $ pm2 stop app_name  
-  $ pm2 delete app_name`  
+    $ pm2 start app_name    
+    $ pm2 restart app_name  
+    $ pm2 reload app_name  
+    $ pm2 stop app_name  
+    $ pm2 delete app_name    
 
 ### When using an Ecosystem file:
 
