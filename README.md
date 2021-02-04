@@ -244,11 +244,11 @@ We’ll use it to run our first unmodified app:
         }   
    
         res.send(`Final count is ${count}`);   
-     })    
+        })    
 
-    app.listen(port, () => {    
-        console.log(`App listening on port ${port}`);    
-     })      
+        app.listen(port, () => {    
+            console.log(`App listening on port ${port}`);    
+         })      
 
 Run the app with:    
 `$ pm2 start app.js -i 0`    
