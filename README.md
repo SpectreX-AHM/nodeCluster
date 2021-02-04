@@ -264,7 +264,7 @@ Rather than always passing in configurations when you run the app with pm2 start
 You can generate an Ecosystem File with the following command:  
 `$ pm2 ecosystem`  
 
-It will generate a file named ecosystem.config.js. As for our app, we need to modify it as shown below:  
+It will generate a file named ecosystem.config.js. As for our app, we need to modify it as shown below:    
         `module.exports = {    
               apps : [{    
               name: "nodeCluster",     
@@ -272,7 +272,7 @@ It will generate a file named ecosystem.config.js. As for our app, we need to mo
               instances : 0,     
               exec_mode : "cluster"    
               }]     
-              }`     
+             }`     
 
 By setting exec_mode with the cluster value, you instruct PM2 to load balance between each instance. The instances are set to 0 just as before, which will spawn as many workers as there are CPU cores.
 
@@ -286,12 +286,12 @@ You can now run the app with:
 
 The app will run in cluster mode, just as before.
 
-You can start, restart, reload, stop and delete an app with the following commands, respectively:  
-      `>$ pm2 start app_name      
+You can start, restart, reload, stop and delete an app with the following commands, respectively:   
+     `$ pm2 start app_name      
       $ pm2 restart app_name    
       $ pm2 reload app_name    
       $ pm2 stop app_name    
-      >$ pm2 delete app_name`      
+      $ pm2 delete app_name`      
 
 ### When using an Ecosystem file:
 
