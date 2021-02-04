@@ -9,10 +9,11 @@ Incoming connections are distributed among child processes in one of two ways:
 
 ## Using Clusters
 Let’s use the cluster module in the app to spawn some child processes and see how that improves things.  
-     const express = require('express');  
-     const port = 3000;  
-     const cluster = require('cluster');  
-     const totalCPUs = require('os').cpus().length;  
+
+      const express = require('express');  
+      const port = 3000;  
+      const cluster = require('cluster');  
+      const totalCPUs = require('os').cpus().length;  
 
      if (cluster.isMaster) {  
      console.log(`Number of CPUs is ${totalCPUs}`);  
