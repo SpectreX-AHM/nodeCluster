@@ -9,67 +9,67 @@ Incoming connections are distributed among child processes in one of two ways:
 
 ## Using Clusters
 Let’s use the cluster module in the app to spawn some child processes and see how that improves things.
-`const express = require('express');  
-const port = 3000;  
-const cluster = require('cluster');  
-const totalCPUs = require('os').cpus().length;  `
+    `const express = require('express');  
+    const port = 3000;  
+    const cluster = require('cluster');  
+    const totalCPUs = require('os').cpus().length;  `
 
-`if (cluster.isMaster) {  
-  console.log(`Number of CPUs is ${totalCPUs}`);  
-  console.log(`Master ${process.pid} is running`);  
+    `if (cluster.isMaster) {  
+    console.log(`Number of CPUs is ${totalCPUs}`);  
+    console.log(`Master ${process.pid} is running`);  
 
-  //Fork workers.  
-  for (let i = 0; i < totalCPUs; i++) {  
-    cluster.fork();  
-  }`  
+    //Fork workers.  
+    for (let i = 0; i < totalCPUs; i++) {  
+        cluster.fork();  
+    }`  
 
-  `cluster.on('exit', (worker, code, signal) => {  
-    console.log(`worker ${worker.process.pid} died`);  
-    console.log("Let's fork another worker!");  
-    cluster.fork();  
-  });  
+    `cluster.on('exit', (worker, code, signal) => {  
+        console.log(`worker ${worker.process.pid} died`);  
+        console.log("Let's fork another worker!");  
+        cluster.fork();  
+    });  
 
-} else {  
-  const app = express();  
-  console.log(`Worker ${process.pid} started`);  
+    } else {  
+    const app = express();  
+    console.log(`Worker ${process.pid} started`);  
 
-  app.get('/', (req, res) => {  
-    res.send('Hello World!');  
-  })  
+    app.get('/', (req, res) => {  
+        res.send('Hello World!');  
+    })  
 
-  app.get('/api/:n', function (req, res) {  
-    let n = parseInt(req.params.n);  
-    let count = 0;  
+    app.get('/api/:n', function (req, res) {  
+        let n = parseInt(req.params.n);  
+        let count = 0;  
 
-    if (n > 5000000000) n = 5000000000;  
+        if (n > 5000000000) n = 5000000000;  
 
-    for(let i = 0; i <= n; i++){  
-      count += i;  
-    }  
+        for(let i = 0; i <= n; i++){  
+        count += i;  
+        }  
 
-    res.send(`Final count is ${count}`);  
-  })  
+        res.send(`Final count is ${count}`);  
+    })  
 
-  app.listen(port, () => {  
-    console.log(`App listening on port ${port}`);  
-  })  
+    app.listen(port, () => {  
+        console.log(`App listening on port ${port}`);  
+    })  
 
-}`  
+    }`  
 
 We are spawning up several child processes that will all share port 3000 and that will be able to handle requests sent to this port. The worker processes are spawned using the child_process.fork() method. The method returns a ChildProcess object that has a built-in communication channel that allows messages to be passed back and forth between the child and its parent.  
 We create as many child processes as there are CPU cores on the machine the app is running. It is recommended to not create more workers than there are logical cores on the computer as this can cause an overhead in terms of scheduling costs. This happens because the system will have to schedule all the created processes so that each gets a turn on the few cores.  
 The workers are created and managed by the master process. When the app first runs, we check to see if it’s a master process with isMaster. This is determined by the process.env.NODE_UNIQUE_ID variable. If process.env.NODE_UNIQUE_ID is undefined, then isMaster will be true.If the process is a master, we then call cluster.fork() to spawn several processes. We log the master and worker process IDs. Below, you can see the output from running the app on a four-core system. When a child process dies, we spawn a new one to keep utilizing the available CPU cores.  
 
-`Number of CPUs is 4  
-Master 67967 is running  
-Worker 67981 started  
-App listening on port 3000  
-Worker 67988 started  
-App listening on port 3000  
-Worker 67982 started  
-Worker 67975 started  
-App listening on port 3000  
-App listening on port 3000`    
+    `Number of CPUs is 4  
+    Master 67967 is running  
+    Worker 67981 started  
+    App listening on port 3000  
+    Worker 67988 started  
+    App listening on port 3000  
+    Worker 67982 started  
+    Worker 67975 started  
+    App listening on port 3000  
+    App listening on port 3000`    
 
 To see the improvement clustering offers, run the same experiment as before: first make a request to the server with a large value for n and quickly run another request in another browser tab. The second request will complete while the first is still running — it doesn’t have to wait for the other request to complete. With multiple workers available to take requests, both server availability and throughput are improved.  
 Running a request in one browser tab and quickly running another one in a second tab might work to show us the improvement offered by clustering for our example, but it’s hardly a proper or reliable way to determine performance improvements. Let’s take a look at some benchmarks that will better demonstrate how much clustering has improved our app.
@@ -83,132 +83,130 @@ Then run the app that you want to test with node app.js. We’ll start by testin
 `$ loadtest http://localhost:3000/api/500000 -n 1000 -c 100`    
 
 The above command will send 1000 requests to the given URL, of which 100 are concurrent. The following is the output from running the above command:    
+    `Requests: 0 (0%), requests per second: 0, mean latency: 0 ms`  
 
-`Requests: 0 (0%), requests per second: 0, mean latency: 0 ms`  
+    `Target URL:          http://localhost:3000/api/500000  
+    Max requests:        1000  
+    Concurrency level:   100  
+    Agent:               none  
 
-`Target URL:          http://localhost:3000/api/500000  
-Max requests:        1000  
-Concurrency level:   100  
-Agent:               none  
+    Completed requests:  1000  
+    Total errors:        0  
+    Total time:          1.268364041 s  
+    Requests per second: 788  
+    Mean latency:        119.4 ms  
 
-Completed requests:  1000  
-Total errors:        0  
-Total time:          1.268364041 s  
-Requests per second: 788  
-Mean latency:        119.4 ms  
-
-Percentage of the requests served within a certain time  
-  50%      121 ms  
-  90%      132 ms  
-  95%      135 ms  
-  99%      141 ms  
- 100%      142 ms (longest request)`    
+    Percentage of the requests served within a certain time  
+    50%      121 ms  
+    90%      132 ms  
+    95%      135 ms  
+    99%      141 ms  
+    100%      142 ms (longest request)`    
 
  We see that with the same request (with n = 500000) the server was able to handle 788 requests per second with a mean latency of 119.4 milliseconds (the average time it took to complete a single request). Let’s try it again but with more requests this time (and with no clusters):  
- 
  `$ loadtest http://localhost:3000/api/5000000 -n 1000 -c 100`  
 
  Below’s the output:  
 
- `Requests: 0 (0%), requests per second: 0, mean latency: 0 ms  
-Requests: 573 (57%), requests per second: 115, mean latency: 798.3 ms  
+    `Requests: 0 (0%), requests per second: 0, mean latency: 0 ms  
+    Requests: 573 (57%), requests per second: 115, mean latency: 798.3 ms  
 
-Target URL:          http://localhost:3000/api/5000000  
-Max requests:        1000  
-Concurrency level:   100  
-Agent:               none  
+    Target URL:          http://localhost:3000/api/5000000  
+    Max requests:        1000  
+    Concurrency level:   100  
+    Agent:               none  
 
-Completed requests:  1000  
-Total errors:        0  
-Total time:          8.740058135 s  
-Requests per second: 114  
-Mean latency:        828.9 ms  
+    Completed requests:  1000  
+    Total errors:        0  
+    Total time:          8.740058135 s  
+    Requests per second: 114  
+    Mean latency:        828.9 ms  
 
-Percentage of the requests served within a certain time  
-  50%      869 ms  
-  90%      874 ms  
-  95%      876 ms  
-  99%      879 ms  
- 100%      880 ms (longest request)`  
+    Percentage of the requests served within a certain time  
+    50%      869 ms  
+    90%      874 ms  
+    95%      876 ms  
+    99%      879 ms  
+    100%      880 ms (longest request)`  
 
 With a request where n = 5000000 the server was able to handle 114 requests per second with a mean latency of 828.9 milliseconds. Let’s compare this result with that of the app that uses clusters. Stop the non-cluster app, run the clustered one and, finally, run the same load tests.  
 Below are the results for testing for http://localhost:3000/api/500000:  
 
-`Requests: 0 (0%), requests per second: 0, mean latency: 0 ms  
+    `Requests: 0 (0%), requests per second: 0, mean latency: 0 ms  
 
-Target URL:          http://localhost:3000/api/500000  
-Max requests:        1000  
-Concurrency level:   100  
-Agent:               none  
+    Target URL:          http://localhost:3000/api/500000  
+    Max requests:        1000  
+    Concurrency level:   100  
+    Agent:               none  
 
-Completed requests:  1000  
-Total errors:        0  
-Total time:          0.701446328 s  
-Requests per second: 1426  
-Mean latency:        65 ms  
+    Completed requests:  1000  
+    Total errors:        0  
+    Total time:          0.701446328 s  
+    Requests per second: 1426  
+    Mean latency:        65 ms  
 
-Percentage of the requests served within a certain time  
-  50%      61 ms  
-  90%      81 ms  
-  95%      90 ms  
-  99%      106 ms  
- 100%      112 ms (longest request)`  
+    Percentage of the requests served within a certain time  
+    50%      61 ms  
+    90%      81 ms  
+    95%      90 ms  
+    99%      106 ms  
+    100%      112 ms (longest request)`  
 
 Tested with the same requests (when n = 500000), the app that uses clustering was able to handle 1426 requests per second — a significant increase, compared to the 788 requests per second of the app with no clusters. The mean latency of the clustered app is 65 milliseconds, compared to 119.4 of the app with no clusters. You can clearly see the improvement that clustering added to the app.  
 And below are the results for testing for http://localhost:3000/api/5000000:  
 
-`Requests: 0 (0%), requests per second: 0, mean latency: 0 ms  
+    `Requests: 0 (0%), requests per second: 0, mean latency: 0 ms  
 
-Target URL:          http://localhost:3000/api/5000000  
-Max requests:        1000  
-Concurrency level:   100  
-Agent:               none  
+    Target URL:          http://localhost:3000/api/5000000  
+    Max requests:        1000  
+    Concurrency level:   100  
+    Agent:               none  
 
-Completed requests:  1000  
-Total errors:        0  
-Total time:          2.43770738 s  
-Requests per second: 410  
-Mean latency:        229.9 ms  
+    Completed requests:  1000  
+    Total errors:        0  
+    Total time:          2.43770738 s  
+    Requests per second: 410  
+    Mean latency:        229.9 ms  
 
-Percentage of the requests served within a certain time  
-  50%      235 ms  
-  90%      253 ms  
-  95%      259 ms  
-  99%      355 ms  
- 100%      421 ms (longest request)`  
+    Percentage of the requests served within a certain time  
+    50%      235 ms  
+    90%      253 ms  
+    95%      259 ms  
+    99%      355 ms  
+    100%      421 ms (longest request)`  
 
 Here (when n = 5000000), the app was able to run 410 requests per second, compared to 114 of the app with no clusters, with a latency of 229.9, compared with 828.9 of the other app.  
-Before moving on to the next section, let’s take a look at a scenario where clustering may not offer much performance improvement. We’ll run two more tests for each of our apps. We’ll test requests that aren’t CPU-intensive and that run fairly quickly without overloading the Event Loop. With the no-cluster app running, execute the following test:    
-`$ loadtest http://localhost:3000/api/50 -n 1000 -c 100`   
+Before moving on to the next section, let’s take a look at a scenario where clustering may not offer much performance improvement. We’ll run two more tests for each of our apps. We’ll test requests that aren’t CPU-intensive and that run fairly quickly without overloading the Event Loop. With the no-cluster app running, execute the following test:     
+`$ loadtest http://localhost:3000/api/50 -n 1000 -c 100`    
 
-The following represents the summarized results:  
-`Total time:          0.531421648 s  
-Requests per second: 1882  
-Mean latency:        50 ms`    
+The following represents the summarized results:   
+    `Total time:          0.531421648 s  
+     Requests per second: 1882  
+     Mean latency:        50 ms`    
 
 With the same no-cluster app still running, execute the following test:  
 `$ loadtest http://localhost:3000/api/5000 -n 1000 -c 100`    
 
 Here are the summarized results:    
-`Total time:          0.50637567 s  
-Requests per second: 1975  
-Mean latency:        47.6 ms`    
+    `Total time:          0.50637567 s   
+     Requests per second: 1975   
+     Mean latency:        47.6 ms`     
 
 Now, stop the app and run the clustered one once more. With the cluster app running, execute the following test:    
 `$ loadtest http://localhost:3000/api/50 -n 1000 -c 100`    
 
-The summarized results:    
-`Total time:          0.598028941 s  
-Requests per second: 1672  
-Mean latency:        56.6 ms`    
+The summarized results:     
+    `Total time:          0.598028941 s  
+     Requests per second: 1672  
+     Mean latency:        56.6 ms`    
 
 The clustered app ran 1672 requests per second compared to 1882 of the no-cluster one and had a mean latency of 56.6 milliseconds compared to 50 of the no-cluster one. Let’s run the other test. With the same cluster app still running, execute the test below:    
 `$ loadtest http://localhost:3000/api/5000 -n 1000 -c 100`    
 
 The summarized results:  
-`Total time:          0.5703417869999999 s  
-Requests per second: 1753  
-Mean latency:        53.7 ms`    
+     `Total time:          0.5703417869999999 s     
+      Requests per second: 1753    
+      Mean latency:        53.7 ms`       
 
 Here, the clustered app ran 1753 requests per second compared to 1975 of the no-cluster one and had a mean latency of 53.7 milliseconds compared to 47.6 of the no-cluster one.Based on those tests, you can see that clustering didn’t offer much improvement to the app’s performance. In fact, the clustered app performed a bit worse compared to the one that doesn’t use clusters. How come?
 
@@ -221,8 +219,8 @@ In our example, the clustered app performs a bit worse than the no-cluster app b
 ## Using PM2 to Manage a Node.js Cluster
 In our app, we are using the Node.js cluster module to manually create and manage worker processes. We first determine the number of workers to spawn (using the number of CPU cores), then manually spawn the workers, and finally, listen for any dead workers so we can spawn new ones. In our very simple app, we’ve had to write a decent amount of code just to handle clustering. In a production app, you can expect to write even more.
 
-There is a tool that can help manage the process a bit better — the [PM2](https://pm2.keymetrics.io/) process manager. PM2 is a Production Process Manager for Node.js applications with a built-in Load Balancer. When properly configured, PM2 will automatically run your app in cluster mode, spawn workers for you, and take care of spawning new workers when a worker dies. PM2 makes it easy to stop, delete, and start processes and it also has some monitoring tools that can help you to monitor and tweak your app’s performance.
-To use PM2, first install it globally:  
+There is a tool that can help manage the process a bit better — the [PM2](https://pm2.keymetrics.io/) process manager. PM2 is a Production Process Manager for Node.js applications with a built-in Load Balancer. When properly configured, PM2 will automatically run your app in cluster mode, spawn workers for you, and take care of spawning new workers when a worker dies. PM2 makes it easy to stop, delete, and start processes and it also has some monitoring tools that can help you to monitor and tweak your app’s performance.  
+To use PM2, first install it globally:    
 `$ npm install pm2 -g`  
 
 We’ll use it to run our first unmodified app:    
