@@ -226,7 +226,7 @@ To use PM2, first install it globally:
 `$ npm install pm2 -g`  
 
 We’ll use it to run our first unmodified app:    
-`const express = require('express');    
+``const express = require('express');    
 const app = express();    
 const port = 3000;    
 app.get('/', (req, res) => {    
@@ -247,7 +247,7 @@ app.get('/api/:n', function (req, res) {
 
 app.listen(port, () => {    
   console.log(`App listening on port ${port}`);    
-})`     
+})``     
 
 Run the app with:    
 `$ pm2 start app.js -i 0`    
