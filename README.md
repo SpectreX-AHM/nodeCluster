@@ -8,53 +8,53 @@ Incoming connections are distributed among child processes in one of two ways:
 - The master process creates a listen socket and sends it to interested workers that will then be able to accept incoming connections directly.
 
 ## Using Clusters
-Let’s use the cluster module in the app to spawn some child processes and see how that improves things.
-    `const express = require('express');  
-    const port = 3000;  
-    const cluster = require('cluster');  
-    const totalCPUs = require('os').cpus().length;  `
+Let’s use the cluster module in the app to spawn some child processes and see how that improves things.  
+     const express = require('express');  
+     const port = 3000;  
+     const cluster = require('cluster');  
+     const totalCPUs = require('os').cpus().length;  
 
-    `if (cluster.isMaster) {  
-    console.log(`Number of CPUs is ${totalCPUs}`);  
-    console.log(`Master ${process.pid} is running`);  
+     if (cluster.isMaster) {  
+     console.log(`Number of CPUs is ${totalCPUs}`);  
+     console.log(`Master ${process.pid} is running`);  
 
-    //Fork workers.  
-    for (let i = 0; i < totalCPUs; i++) {  
-        cluster.fork();  
-    }`  
+     //Fork workers.  
+     for (let i = 0; i < totalCPUs; i++) {  
+         cluster.fork();  
+     }  
 
-    `cluster.on('exit', (worker, code, signal) => {  
-        console.log(`worker ${worker.process.pid} died`);  
-        console.log("Let's fork another worker!");  
-        cluster.fork();  
-    });  
+     cluster.on('exit', (worker, code, signal) => {  
+         console.log(`worker ${worker.process.pid} died`);  
+         console.log("Let's fork another worker!");  
+         cluster.fork();  
+     });  
 
-    } else {  
-    const app = express();  
-    console.log(`Worker ${process.pid} started`);  
+     } else {  
+     const app = express();  
+     console.log(`Worker ${process.pid} started`);  
 
-    app.get('/', (req, res) => {  
-        res.send('Hello World!');  
-    })  
+     app.get('/', (req, res) => {  
+         res.send('Hello World!');  
+     })  
 
-    app.get('/api/:n', function (req, res) {  
-        let n = parseInt(req.params.n);  
-        let count = 0;  
+     app.get('/api/:n', function (req, res) {  
+         let n = parseInt(req.params.n);  
+         let count = 0;  
 
-        if (n > 5000000000) n = 5000000000;  
+         if (n > 5000000000) n = 5000000000;  
 
-        for(let i = 0; i <= n; i++){  
-        count += i;  
-        }  
+         for(let i = 0; i <= n; i++){  
+         count += i;  
+         }  
 
-        res.send(`Final count is ${count}`);  
-    })  
+         res.send(`Final count is ${count}`);  
+     })  
 
-    app.listen(port, () => {  
-        console.log(`App listening on port ${port}`);  
-    })  
+     app.listen(port, () => {  
+         console.log(`App listening on port ${port}`);  
+     })  
 
-    }`  
+     }  
 
 We are spawning up several child processes that will all share port 3000 and that will be able to handle requests sent to this port. The worker processes are spawned using the child_process.fork() method. The method returns a ChildProcess object that has a built-in communication channel that allows messages to be passed back and forth between the child and its parent.  
 We create as many child processes as there are CPU cores on the machine the app is running. It is recommended to not create more workers than there are logical cores on the computer as this can cause an overhead in terms of scheduling costs. This happens because the system will have to schedule all the created processes so that each gets a turn on the few cores.  
