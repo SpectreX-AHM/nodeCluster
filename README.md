@@ -287,11 +287,11 @@ You can now run the app with:
 The app will run in cluster mode, just as before.
 
 You can start, restart, reload, stop and delete an app with the following commands, respectively:  
-      `$ pm2 start app_name      
+      `>$ pm2 start app_name      
       $ pm2 restart app_name    
       $ pm2 reload app_name    
       $ pm2 stop app_name    
-      $ pm2 delete app_name`      
+      >$ pm2 delete app_name`      
 
 ### When using an Ecosystem file:
 
