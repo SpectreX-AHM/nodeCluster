@@ -228,26 +228,26 @@ To use PM2, first install it globally:
 We’ll use it to run our first unmodified app:    
 `const express = require('express');  
 const app = express();  
-const port = 3000;  
+const port = 3000;  `
 
-app.get('/', (req, res) => {  
+`app.get('/', (req, res) => {  
   res.send('Hello World!');  
-})  
+})  `
 
-app.get('/api/:n', function (req, res) {  
+`app.get('/api/:n', function (req, res) {  
   let n = parseInt(req.params.n);  
-  let count = 0;  
+  let count = 0;  `
 
-  if (n > 5000000000) n = 5000000000;  
+ ` if (n > 5000000000) n = 5000000000; ` 
 
-  for(let i = 0; i <= n; i++){  
+  `for(let i = 0; i <= n; i++){  
     count += i;  
-  }  
+  }`  
 
-  res.send(`Final count is ${count}`);  
-})  
+ ` res.send(`Final count is ${count}`);  
+}) ` 
 
-app.listen(port, () => {  
+`app.listen(port, () => {  
   console.log(`App listening on port ${port}`);  
 })`    
 
@@ -275,7 +275,7 @@ It will generate a file named ecosystem.config.js. As for our app, we need to mo
     instances : 0,   
     exec_mode : "cluster"   
   }]   
-}`    
+}`   
 
 By setting exec_mode with the cluster value, you instruct PM2 to load balance between each instance. The instances are set to 0 just as before, which will spawn as many workers as there are CPU cores.
 
