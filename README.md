@@ -1,4 +1,4 @@
-# nodeCluster
+# nodeCluster🎌
 An instance of Node.js runs in a single thread which means that on a multi-core system (which most computers are these days), not all cores will be utilized by the app. To take advantage of the other available cores, we can launch a cluster of Node.js processes and distribute the load between them. Having multiple threads to handle requests improves the throughput (requests/second) of your server as several clients can be served concurrently. We’ll see how to create child processes with the Node.js cluster module and then later, we’ll take a look at how to manage clustering with the PM2 Process Manager.
 
 ## A Look at Clustering
