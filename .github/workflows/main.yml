@@ -1,0 +1,69 @@
+- name: Dependabot Pull Request Action
+  # You may pin to the exact commit or the version.
+  # uses: koj-co/dependabot-pr-action@e19035258c87688740488ae4915188889aac47c8
+  uses: koj-co/dependabot-pr-action@v1.0.0
+  with:
+    # GitHub token
+    token: 
+    # 
+    labels-major: # optional
+    # 
+    auto-label: # optional
+    # 
+    merge: # optional
+    # 
+    approve: # optional
+    # 
+    labels-premajor: # optional
+    # 
+    labels-minor: # optional
+    # 
+    labels-preminor: # optional
+    # 
+    labels-patch: # optional
+    # 
+    labels-prepatch: # optional
+    # 
+    labels-prerelease: # optional
+    # 
+    auto-label-major: # optional
+    # 
+    merge-major: # optional
+    # 
+    approve-major: # optional
+    # 
+    auto-label-premajor: # optional
+    # 
+    merge-premajor: # optional
+    # 
+    approve-premajor: # optional
+    # 
+    auto-label-minor: # optional
+    # 
+    merge-minor: # optional
+    # 
+    approve-minor: # optional
+    # 
+    auto-label-preminor: # optional
+    # 
+    merge-preminor: # optional
+    # 
+    approve-preminor: # optional
+    # 
+    auto-label-patch: # optional
+    # 
+    merge-patch: # optional
+    # 
+    approve-patch: # optional
+    # 
+    auto-label-prepatch: # optional
+    # 
+    merge-prepatch: # optional
+    # 
+    approve-prepatch: # optional
+    # 
+    auto-label-prerelease: # optional
+    # 
+    merge-prerelease: # optional
+    # 
+    approve-prerelease: # optional
