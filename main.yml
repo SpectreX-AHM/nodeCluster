@@ -1,0 +1,4 @@
+- name: Dependabot issue for PRs
+  # You may pin to the exact commit or the version.
+  # uses: goatandsheep/dependabot-issue-action@085384c6fc7247bf455bcd86178c6fc8a5ffc1d5
+  uses: goatandsheep/dependabot-issue-action@v1.0.1
